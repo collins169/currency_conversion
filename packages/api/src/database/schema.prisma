@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Currency {
+  code          String    @id
+  name          String
+  symbol        String?
+  countryCode       String
+  decimalPlaces Int       @default(2)
+	toCurrencyExchangeRates ExchangeRate[] @relation("toCurrency")
+  fromCurrencyExchangeRates ExchangeRate[] @relation("fromCurrency")
+  wallets       Wallet[]
+	transactions Transaction[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  @@index([code])
+}
+
+model ExchangeRate {
+  id             String       @id @default(uuid())
+  fromCurrency  Currency  @relation("fromCurrency", fields: [fromCurrencyCode], references: [code])
+  fromCurrencyCode String
+  toCurrency    Currency  @relation("toCurrency", fields: [toCurrencyCode], references: [code])
+  toCurrencyCode   String
+  rate           Decimal
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  @@unique([fromCurrencyCode, toCurrencyCode])
+}
+
+model Wallet {
+  id          String       @id @default(uuid())
+  ownerId     String
+  currency    Currency  @relation(fields: [currencyCode], references: [code])
+  currencyCode  String
+  balance    Balance?
+  transactions Transaction[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+	@@unique([ownerId, currencyCode])
+}
+
+model Balance {
+  id         String       @id @default(uuid())
+  wallet     Wallet    @relation(fields: [walletId], references: [id])
+  walletId   String
+  available  Decimal
+  book       Decimal
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@unique([walletId])
+}
+
+model Transaction {
+  id             String              @id @default(uuid())
+  referenceNo    String
+  wallet         Wallet           @relation(fields: [walletId], references: [id])
+  walletId       String
+  currency       Currency?        @relation(fields: [currencyCode], references: [code])
+  currencyCode     String?
+  amount         Decimal          
+  fee            Decimal?
+  description    String?
+  transactionType TransactionType
+  status         TransactionStatus @default(PENDING)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  @@unique([referenceNo, transactionType])
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}

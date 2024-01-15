@@ -1,0 +1,20 @@
+{
+  "name": "currency_conversion",
+  "version": "1.0.0",
+  "description": "A currency conversion application that converts money between the wallets of a user with our supported currencies",
+  "main": "index.js",
+  "author": "Collins Onyetube",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+	"scripts": {
+		"client": "yarn workspace ui start",
+		"server:dev": "yarn workspace api start:dev",
+		"start:dev": "concurrently --kill-others-on-fail \"yarn server:dev\"  \"yarn client\""
+	},
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
